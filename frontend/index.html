@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChangeGuard - Semantic Change Detection</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <header>
+        <h1>🛡️ ChangeGuard</h1>
+        <p>NLP-Based Context-Aware Semantic Change Detection System</p>
+    </header>
+
+    <main>
+        <div class="input-section">
+            <div class="box">
+                <h2>Old Document</h2>
+                <textarea id="oldText" placeholder="Paste the OLD document text here..."></textarea>
+            </div>
+            <div class="box">
+                <h2>New Document</h2>
+                <textarea id="newText" placeholder="Paste the NEW document text here..."></textarea>
+            </div>
+        </div>
+
+        <button id="compareBtn" onclick="compareDocuments()">Compare Documents</button>
+
+        <div id="loading" class="hidden">Analyzing text with spaCy NLP...</div>
+
+        <div id="resultsSection" class="hidden">
+            <h2>Comparison Results</h2>
+            <div id="resultsContainer"></div>
+        </div>
+    </main>
+
+    <script src="/script.js"></script>
+</body>
+</html>
