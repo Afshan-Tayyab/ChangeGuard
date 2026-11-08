@@ -15,7 +15,7 @@ def fmt(val):
     if val == "None" or val is None: 
         return "None"
     if isinstance(val, list): 
-        return " ".join(str(v) for v in val) # Changed to space-join for clean UI
+        return " ".join(str(v) for v in val)
     return str(val)
 
 def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
@@ -58,9 +58,9 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
         old_cond = fmt(old_analysis["conditions"])
         new_cond = fmt(new_analysis["conditions"])
         
-        # Clean up any duplicate formatting
-        old_cond = old_cond.replace("above above", "above").replace("least least", "least")
-        new_cond = new_cond.replace("above above", "above").replace("least least", "least")
+        # Clean up the formatting (remove duplicate words and fix % sign)
+        old_cond = old_cond.replace("above above", "above").replace(" above %", "%").replace("above %", "%")
+        new_cond = new_cond.replace("above above", "above").replace(" above %", "%").replace("above %", "%")
 
         changes.append({
             "type": "Condition Change",
@@ -78,14 +78,20 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
             "impact": f"Eligibility changed from '{fmt(old_analysis['restrictions'])}' to '{fmt(new_analysis['restrictions'])}'."
         })
 
-    # 6. Exception Change
+    # 6. Exception Change (Corrected Logic)
     if old_analysis["exceptions"] != new_analysis["exceptions"]:
-        status = "Exception Added" if old_analysis["exceptions"] == "None" else "Exception Changed"
+        if old_analysis["exceptions"] == "None":
+            status = "Exception Added"
+        elif new_analysis["exceptions"] == "None":
+            status = "Exception Removed"
+        else:
+            status = "Exception Changed"
+            
         changes.append({
             "type": status,
             "old": fmt(old_analysis["exceptions"]),
             "new": fmt(new_analysis["exceptions"]),
-            "impact": "A special exemption or condition was added/modified."
+            "impact": "A special exemption or condition was added, removed, or modified."
         })
         
     # 7. Object Change
