@@ -16,17 +16,19 @@
         <div class="input-section">
             <div class="box">
                 <h2>Old Document</h2>
-                <textarea id="oldText" placeholder="Paste the OLD document text here..."></textarea>
+                <input type="file" id="oldFile" accept=".txt,.pdf,.docx" class="file-input">
+                <p id="oldFileName" class="file-name">No file selected</p>
             </div>
             <div class="box">
                 <h2>New Document</h2>
-                <textarea id="newText" placeholder="Paste the NEW document text here..."></textarea>
+                <input type="file" id="newFile" accept=".txt,.pdf,.docx" class="file-input">
+                <p id="newFileName" class="file-name">No file selected</p>
             </div>
         </div>
 
         <button id="compareBtn" onclick="compareDocuments()">Compare Documents</button>
 
-        <div id="loading" class="hidden">Analyzing text with spaCy NLP...</div>
+        <div id="loading" class="hidden">Extracting text & analyzing with spaCy NLP...</div>
 
         <div id="resultsSection" class="hidden">
             <h2>Comparison Results</h2>

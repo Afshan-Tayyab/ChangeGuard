@@ -9,7 +9,7 @@
 body {
     background-color: #f4f7f6;
     color: #333;
-    overflow-x: hidden; /* FIX: Prevent horizontal scrolling */
+    overflow-x: hidden;
 }
 
 header {
@@ -32,14 +32,14 @@ main {
 
 .input-section {
     display: flex;
-    flex-wrap: wrap; /* FIX: Allow boxes to stack on small screens */
+    flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 20px;
 }
 
 .box {
     flex: 1;
-    min-width: 300px; /* FIX: Ensures boxes don't shrink too much */
+    min-width: 300px;
     background: white;
     padding: 15px;
     border-radius: 8px;
@@ -50,16 +50,6 @@ main {
     font-size: 1.2em;
     margin-bottom: 10px;
     color: #2c3e50;
-}
-
-textarea {
-    width: 100%;
-    height: 200px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: vertical;
-    font-size: 14px;
 }
 
 button {
@@ -99,7 +89,7 @@ button:hover { background-color: #2ecc71; }
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     border-left: 6px solid #3498db;
     width: 100%;
-    overflow-wrap: break-word; /* FIX: Prevents long words from breaking layout */
+    overflow-wrap: break-word;
 }
 
 .result-card.modified { border-left-color: #f39c12; }
@@ -124,7 +114,7 @@ button:hover { background-color: #2ecc71; }
 
 .sentence-compare {
     display: flex;
-    flex-wrap: wrap; /* FIX: Stacks sentences vertically on small screens */
+    flex-wrap: wrap;
     gap: 20px;
     margin-bottom: 15px;
     width: 100%;
@@ -132,7 +122,7 @@ button:hover { background-color: #2ecc71; }
 
 .old-sent, .new-sent {
     flex: 1;
-    min-width: 250px; /* FIX: Prevents overlapping */
+    min-width: 250px;
     padding: 10px;
     padding-left: 15px;
     border-radius: 5px;
@@ -156,3 +146,23 @@ button:hover { background-color: #2ecc71; }
 .change-detail strong { color: #856404; }
 
 .hidden { display: none; }
+
+/* New styles for File Upload */
+.file-input {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #27ae60;
+    border-radius: 5px;
+    background: #f4f7f6;
+    cursor: pointer;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.file-name {
+    font-size: 0.9em;
+    color: #2c3e50;
+    font-weight: bold;
+    word-break: break-all;
+    margin-top: 5px;
+}

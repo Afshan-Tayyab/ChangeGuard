@@ -31,7 +31,6 @@ def analyze_sentence(sentence: str) -> dict:
     for token in doc:
         if token.text.lower() in ("unless", "except", "excluding"):
             exception_start_idx = token.i
-            # Grab the whole clause after the exception word
             phrase = " ".join([t.text for t in doc[token.i:]])
             analysis["exceptions"].append(phrase)
 
@@ -47,20 +46,48 @@ def analyze_sentence(sentence: str) -> dict:
         if token.text.lower() in modals or token.tag_ == "MD":
             analysis["modality"].append(token.text.lower())
 
-    # 4. Extract Deadlines (Dates and Times)
-    # If it's a DATE or TIME, it's a deadline.
-    for ent in doc.ents:
-        if ent.label_ in ("DATE", "TIME"):
-            analysis["deadlines"].append(ent.text)
-        elif ent.label_ in ("PERCENT", "CARDINAL"):
-            # Only treat as condition if it has a comparison word (above, below, least)
-            prev_word = doc[ent.start - 1].text.lower() if ent.start > 0 else ""
-            if prev_word in ("above", "below", "least", "greater", "less", "over", "under"):
-                analysis["conditions"].append(f"{prev_word} {ent.text}")
+    # 4. Extract Conditions and Deadlines
+    comparison_words = {"above", "below", "least", "greater", "less", "over", "under", "before", "after"}
+    
+    # First pass: find all numbers/percentages and their preceding comparison word
+    for i, token in enumerate(doc):
+        if token.like_num or token.ent_type_ in ("PERCENT", "CARDINAL"):
+            # Look 2 words back to catch phrases like "above 75%"
+            context_words = [doc[j].text.lower() for j in range(max(0, i-2), i)]
+            matched_comp = None
+            for cw in context_words:
+                if cw in comparison_words:
+                    matched_comp = cw
+                    break
+            
+            if matched_comp:
+                condition_str = f"{matched_comp} {token.text}"
+                if matched_comp in ("before", "after"):
+                    analysis["deadlines"].append(condition_str)
+                else:
+                    # Check if we already have this condition to avoid duplicates
+                    if not any(token.text in c for c in analysis["conditions"]):
+                        analysis["conditions"].append(condition_str)
+            else:
+                analysis["conditions"].append(token.text)
+
+    # Merge detached percentage signs
+    merged_conditions = []
+    for c in analysis["conditions"]:
+        if c == "%" and merged_conditions:
+            merged_conditions[-1] += "%"
+        else:
+            merged_conditions.append(c)
+    analysis["conditions"] = merged_conditions
+
+    # Second pass: find standalone DATE/TIME entities
+    for token in doc:
+        if token.ent_type_ in ("DATE", "TIME"):
+            if token.text not in [d.replace("before ", "").replace("after ", "") for d in analysis["deadlines"]]:
+                analysis["deadlines"].append(token.text)
 
     # 5. Extract Subject, Action, Object
     for token in doc:
-        # STOP extracting objects if we are inside an exception clause!
         if token.i >= exception_start_idx:
             continue
             
@@ -71,10 +98,11 @@ def analyze_sentence(sentence: str) -> dict:
             analysis["action"].append(token.lemma_)
             
         if token.dep_ in ("dobj", "pobj"):
-            # Exclude dates and restrictions from being objects
-            is_date = any(ent.label_ in ("DATE", "TIME") for ent in doc.ents if token in ent)
-            if not is_date:
-                # Get the full noun phrase for the object (e.g., "examination fee")
+            is_date = token.ent_type_ in ("DATE", "TIME")
+            is_num = token.like_num or token.ent_type_ in ("PERCENT", "CARDINAL")
+            
+            if not is_date and not is_num:
+                # Get the full noun phrase for the object
                 for chunk in doc.noun_chunks:
                     if token in chunk:
                         analysis["object"].append(chunk.text)
@@ -85,7 +113,7 @@ def analyze_sentence(sentence: str) -> dict:
     # Clean up lists
     for key in analysis:
         if isinstance(analysis[key], list):
-            analysis[key] = list(dict.fromkeys(analysis[key])) # Remove duplicates
+            analysis[key] = list(dict.fromkeys(analysis[key])) 
             if not analysis[key]:
                 analysis[key] = "None"
 

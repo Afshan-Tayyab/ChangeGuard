@@ -4,7 +4,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from services.semantic_analyzer import analyze_sentence
 
 def calculate_similarity(text1: str, text2: str) -> float:
-    """Calculates TF-IDF cosine similarity between two sentences."""
     vectorizer = TfidfVectorizer()
     try:
         tfidf = vectorizer.fit_transform([text1, text2])
@@ -13,7 +12,6 @@ def calculate_similarity(text1: str, text2: str) -> float:
         return 0.0
 
 def fmt(val):
-    """Formats lists and None values for clean UI display."""
     if val == "None" or val is None: 
         return "None"
     if isinstance(val, list): 
@@ -21,8 +19,8 @@ def fmt(val):
     return str(val)
 
 def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
-    """Compares the semantic structures of two sentences and returns changes."""
     changes = []
+    condition_changed = False
     
     # 1. Modality Change
     if old_analysis["modality"] != new_analysis["modality"]:
@@ -39,7 +37,7 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
             "type": "Deadline Change",
             "old": fmt(old_analysis["deadlines"]),
             "new": fmt(new_analysis["deadlines"]),
-            "impact": f"The deadline changed from {fmt(old_analysis['deadlines'])} to {fmt(new_analysis['deadlines'])}."
+            "impact": f"The deadline or temporal condition changed from {fmt(old_analysis['deadlines'])} to {fmt(new_analysis['deadlines'])}."
         })
 
     # 3. Negation Change
@@ -55,11 +53,21 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
         
     # 4. Condition Change
     if old_analysis["conditions"] != new_analysis["conditions"]:
+        condition_changed = True
+        
+        # Clean up the messy spaCy output (e.g., "above 75, above %" -> "above 75%")
+        old_cond = fmt(old_analysis["conditions"])
+        new_cond = fmt(new_analysis["conditions"])
+        
+        # String replacements to fix duplicate words
+        old_cond = old_cond.replace("above, above", "above").replace("75, above %", "75%").replace("75, %", "75%")
+        new_cond = new_cond.replace("above, above", "above").replace("85, above %", "85%").replace("85, %", "85%")
+
         changes.append({
             "type": "Condition Change",
-            "old": fmt(old_analysis["conditions"]),
-            "new": fmt(new_analysis["conditions"]),
-            "impact": f"The requirement changed from {fmt(old_analysis['conditions'])} to {fmt(new_analysis['conditions'])}."
+            "old": old_cond,
+            "new": new_cond,
+            "impact": f"The requirement changed from {old_cond} to {new_cond}."
         })
         
     # 5. Restriction Change
@@ -81,8 +89,8 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
             "impact": "A special exemption or condition was added/modified."
         })
         
-    # 7. Object Change
-    if old_analysis["object"] != new_analysis["object"]:
+    # 7. Object Change (Skip if Condition Changed to prevent false positives)
+    if not condition_changed and old_analysis["object"] != new_analysis["object"]:
         changes.append({
             "type": "Object Change",
             "old": fmt(old_analysis["object"]),
@@ -93,7 +101,6 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
     return changes
 
 def compare_documents(old_sentences: list, new_sentences: list) -> list:
-    """Matches sentences and detects changes between two lists of sentences."""
     comparison_results = []
     used_new_indices = set()
 
@@ -110,7 +117,6 @@ def compare_documents(old_sentences: list, new_sentences: list) -> list:
             sim = calculate_similarity(old_sent, new_sent)
             new_analysis = analyze_sentence(new_sent)
             
-            # Check if the main action (verb) is identical
             current_action_match = (old_analysis["action"] != "None" and old_analysis["action"] == new_analysis["action"])
             
             if sim > best_similarity or (current_action_match and sim > 0.15):
@@ -118,7 +124,6 @@ def compare_documents(old_sentences: list, new_sentences: list) -> list:
                 best_match_idx = j
                 action_match = current_action_match
                 
-        # Match if similarity is high enough OR if the main action matches
         if (best_similarity > 0.3 or action_match) and best_match_idx != -1:
             used_new_indices.add(best_match_idx)
             new_sent = new_sentences[best_match_idx]
@@ -149,7 +154,6 @@ def compare_documents(old_sentences: list, new_sentences: list) -> list:
                 "changes_detected": []
             })
 
-    # Handle any new sentences that were never matched
     for j, new_sent in enumerate(new_sentences):
         if j not in used_new_indices:
             comparison_results.append({

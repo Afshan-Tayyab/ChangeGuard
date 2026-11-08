@@ -1,4 +1,3 @@
-# backend/server.py
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
@@ -49,7 +48,7 @@ def get_db():
 
 @app.get("/")
 def root():
-    return {"project": "ChangeGuard", "status": "running", "stage": "Final"}
+    return {"project": "ChangeGuard", "status": "running", "stage": "File Upload Update"}
 
 @app.post("/extract")
 async def extract_document(file: UploadFile = File(...)):
@@ -91,6 +90,61 @@ async def compare(docs: DocumentPair, db: Session = Depends(get_db)):
     db.refresh(history_entry)
     
     return {"total_changes": len(results), "comparison": results}
+
+# --- NEW FILE UPLOAD COMPARISON ENDPOINT ---
+@app.post("/compare-files")
+async def compare_files(
+    old_file: UploadFile = File(...),
+    new_file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    allowed_exts = [".txt", ".pdf", ".docx"]
+    old_ext = os.path.splitext(old_file.filename)[1].lower()
+    new_ext = os.path.splitext(new_file.filename)[1].lower()
+    
+    if old_ext not in allowed_exts or new_ext not in allowed_exts:
+        raise HTTPException(status_code=400, detail="Only TXT, PDF, and DOCX files are allowed.")
+
+    old_path = os.path.join(UPLOAD_DIR, f"old_{old_file.filename}")
+    new_path = os.path.join(UPLOAD_DIR, f"new_{new_file.filename}")
+    
+    with open(old_path, "wb") as buffer:
+        shutil.copyfileobj(old_file.file, buffer)
+    with open(new_path, "wb") as buffer:
+        shutil.copyfileobj(new_file.file, buffer)
+
+    try:
+        old_text = extract_text(old_path)
+        new_text = extract_text(new_path)
+        
+        if not old_text.strip() or not new_text.strip():
+            raise HTTPException(status_code=400, detail="One or both documents are empty or text could not be extracted.")
+
+        old_sentences = split_into_sentences(old_text)
+        new_sentences = split_into_sentences(new_text)
+        results = compare_documents(old_sentences, new_sentences)
+        
+        history_entry = ComparisonHistory(
+            old_filename=old_file.filename,
+            new_filename=new_file.filename,
+            changes_json=json.dumps(results)
+        )
+        db.add(history_entry)
+        db.commit()
+        db.refresh(history_entry)
+        
+        return {
+            "old_filename": old_file.filename,
+            "new_filename": new_file.filename,
+            "total_changes": len(results),
+            "comparison": results
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if os.path.exists(old_path): os.remove(old_path)
+        if os.path.exists(new_path): os.remove(new_path)
 
 @app.get("/history")
 def get_history(db: Session = Depends(get_db)):
