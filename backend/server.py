@@ -1,21 +1,22 @@
+# backend/server.py
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+import hashlib
 import shutil
 import os
 import json
 
 # Import Database
-from database import SessionLocal, engine, Base, ComparisonHistory
+from database import SessionLocal, engine, Base, ComparisonHistory, User
 
 # Import Services
 from services.text_extractor import extract_text
 from services.semantic_analyzer import split_into_sentences, analyze_sentence
 from services.change_detector import compare_documents
 
-# Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -48,8 +49,38 @@ def get_db():
 
 @app.get("/")
 def root():
-    return {"project": "ChangeGuard", "status": "running", "stage": "File Upload Update"}
+    return {"project": "ChangeGuard", "status": "running", "stage": "Dashboard Update"}
 
+# --- AUTHENTICATION ROUTES ---
+@app.post("/register")
+def register(username: str, password: str, db: Session = Depends(get_db)):
+    if db.query(User).filter(User.username == username).first():
+        raise HTTPException(status_code=400, detail="Username already registered")
+    
+    # Use SHA-256 for secure hashing without bcrypt errors
+    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    new_user = User(username=username, hashed_password=hashed_pw)
+    db.add(new_user)
+    db.commit()
+    return {"message": "User created successfully"}
+
+@app.post("/login")
+def login(username: str, password: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    hashed_pw = hashlib.sha256(password.encode()).hexdigest()
+    
+    if not user or user.hashed_password != hashed_pw:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    return {"message": "Login successful", "username": user.username}
+
+@app.get("/dashboard-stats")
+def get_stats(db: Session = Depends(get_db)):
+    total = db.query(ComparisonHistory).count()
+    history = db.query(ComparisonHistory).order_by(ComparisonHistory.timestamp.desc()).limit(5).all()
+    return {"total_comparisons": total, "recent_history": history}
+
+# --- NLP & COMPARISON ROUTES ---
 @app.post("/extract")
 async def extract_document(file: UploadFile = File(...)):
     ext = os.path.splitext(file.filename)[1].lower()
@@ -91,7 +122,6 @@ async def compare(docs: DocumentPair, db: Session = Depends(get_db)):
     
     return {"total_changes": len(results), "comparison": results}
 
-# --- NEW FILE UPLOAD COMPARISON ENDPOINT ---
 @app.post("/compare-files")
 async def compare_files(
     old_file: UploadFile = File(...),
@@ -158,6 +188,7 @@ def get_history_detail(history_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="History not found")
     return {"id": entry.id, "timestamp": entry.timestamp, "comparison": json.loads(entry.changes_json)}
 
+# --- FRONTEND SERVING ROUTES ---
 @app.get("/style.css")
 def get_css():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -177,4 +208,15 @@ def serve_frontend():
         return f"<h3>Error: Cannot find {frontend_file}.</h3>"
         
     with open(frontend_file, "r", encoding="utf-8") as f:
+        return f.read()
+
+@app.get("/login", response_class=HTMLResponse)
+def serve_login():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    login_file = os.path.abspath(os.path.join(base_dir, "..", "frontend", "login.html"))
+    
+    if not os.path.exists(login_file):
+        return f"<h3>Error: Cannot find {login_file}.</h3>"
+        
+    with open(login_file, "r", encoding="utf-8") as f:
         return f.read()

@@ -16,6 +16,12 @@ class ComparisonHistory(Base):
     old_filename = Column(String, default="Pasted Text")
     new_filename = Column(String, default="Pasted Text")
     timestamp = Column(DateTime, default=datetime.utcnow)
-    changes_json = Column(Text) # Store the full JSON string of changes
+    changes_json = Column(Text)
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True)
+    hashed_password = Column(String)
 
 Base.metadata.create_all(bind=engine)
