@@ -15,7 +15,7 @@ def fmt(val):
     if val == "None" or val is None: 
         return "None"
     if isinstance(val, list): 
-        return ", ".join(str(v) for v in val)
+        return " ".join(str(v) for v in val) # Changed to space-join for clean UI
     return str(val)
 
 def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
@@ -55,13 +55,12 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
     if old_analysis["conditions"] != new_analysis["conditions"]:
         condition_changed = True
         
-        # Clean up the messy spaCy output (e.g., "above 75, above %" -> "above 75%")
         old_cond = fmt(old_analysis["conditions"])
         new_cond = fmt(new_analysis["conditions"])
         
-        # String replacements to fix duplicate words
-        old_cond = old_cond.replace("above, above", "above").replace("75, above %", "75%").replace("75, %", "75%")
-        new_cond = new_cond.replace("above, above", "above").replace("85, above %", "85%").replace("85, %", "85%")
+        # Clean up any duplicate formatting
+        old_cond = old_cond.replace("above above", "above").replace("least least", "least")
+        new_cond = new_cond.replace("above above", "above").replace("least least", "least")
 
         changes.append({
             "type": "Condition Change",
@@ -89,7 +88,7 @@ def detect_changes(old_analysis: dict, new_analysis: dict) -> list:
             "impact": "A special exemption or condition was added/modified."
         })
         
-    # 7. Object Change (Skip if Condition Changed to prevent false positives)
+    # 7. Object Change
     if not condition_changed and old_analysis["object"] != new_analysis["object"]:
         changes.append({
             "type": "Object Change",

@@ -26,7 +26,7 @@ def analyze_sentence(sentence: str) -> dict:
     modals = {"must", "may", "should", "can", "will", "shall", "might", "could"}
     negations = {"not", "no", "never", "neither", "without", "cannot"}
     
-    # 1. Find the index where the exception starts (e.g., "unless")
+    # 1. Find the index where the exception starts
     exception_start_idx = 999
     for token in doc:
         if token.text.lower() in ("unless", "except", "excluding"):
@@ -34,7 +34,7 @@ def analyze_sentence(sentence: str) -> dict:
             phrase = " ".join([t.text for t in doc[token.i:]])
             analysis["exceptions"].append(phrase)
 
-    # 2. Extract Restrictions (Capture the full noun phrase)
+    # 2. Extract Restrictions
     for chunk in doc.noun_chunks:
         if "only" in chunk.text.lower() or "all" in chunk.text.lower():
             analysis["restrictions"].append(chunk.text.strip())
@@ -49,10 +49,8 @@ def analyze_sentence(sentence: str) -> dict:
     # 4. Extract Conditions and Deadlines
     comparison_words = {"above", "below", "least", "greater", "less", "over", "under", "before", "after"}
     
-    # First pass: find all numbers/percentages and their preceding comparison word
     for i, token in enumerate(doc):
         if token.like_num or token.ent_type_ in ("PERCENT", "CARDINAL"):
-            # Look 2 words back to catch phrases like "above 75%"
             context_words = [doc[j].text.lower() for j in range(max(0, i-2), i)]
             matched_comp = None
             for cw in context_words:
@@ -65,7 +63,6 @@ def analyze_sentence(sentence: str) -> dict:
                 if matched_comp in ("before", "after"):
                     analysis["deadlines"].append(condition_str)
                 else:
-                    # Check if we already have this condition to avoid duplicates
                     if not any(token.text in c for c in analysis["conditions"]):
                         analysis["conditions"].append(condition_str)
             else:
@@ -80,11 +77,14 @@ def analyze_sentence(sentence: str) -> dict:
             merged_conditions.append(c)
     analysis["conditions"] = merged_conditions
 
-    # Second pass: find standalone DATE/TIME entities
+    # Second pass: find standalone DATE/TIME entities (Excluding durations)
+    durations = {"days", "day", "years", "year", "months", "month", "weeks", "week"}
     for token in doc:
         if token.ent_type_ in ("DATE", "TIME"):
-            if token.text not in [d.replace("before ", "").replace("after ", "") for d in analysis["deadlines"]]:
-                analysis["deadlines"].append(token.text)
+            # Skip durations to prevent false "Deadline Change" on "20 days"
+            if token.text.lower() not in durations:
+                if token.text not in [d.replace("before ", "").replace("after ", "") for d in analysis["deadlines"]]:
+                    analysis["deadlines"].append(token.text)
 
     # 5. Extract Subject, Action, Object
     for token in doc:
@@ -102,7 +102,6 @@ def analyze_sentence(sentence: str) -> dict:
             is_num = token.like_num or token.ent_type_ in ("PERCENT", "CARDINAL")
             
             if not is_date and not is_num:
-                # Get the full noun phrase for the object
                 for chunk in doc.noun_chunks:
                     if token in chunk:
                         analysis["object"].append(chunk.text)
