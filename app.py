@@ -7,12 +7,8 @@ import tempfile
 import hashlib
 import spacy
 
-# Download the spaCy model automatically on Streamlit Cloud
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    from spacy.cli import download
-    download("en_core_web_sm")
+# Load the spaCy model (it is installed via requirements.txt)
+nlp = spacy.load("en_core_web_sm")
 
 # Add backend to path so Streamlit can find the NLP engine
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'backend')))
