@@ -60,7 +60,8 @@ def analyze_sentence(sentence: str) -> dict:
             
             if matched_comp:
                 condition_str = f"{matched_comp} {token.text}"
-                if matched_comp in ("before", "after"):
+                # Only treat as a deadline if it's an actual date/time entity
+                if matched_comp in ("before", "after") and token.ent_type_ in ("DATE", "TIME"):
                     analysis["deadlines"].append(condition_str)
                 else:
                     if not any(token.text in c for c in analysis["conditions"]):
