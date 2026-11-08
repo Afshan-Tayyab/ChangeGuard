@@ -1,168 +1,51 @@
 /* frontend/style.css */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { display: flex; height: 100vh; background: #f4f7f6; overflow: hidden; }
 
-body {
-    background-color: #f4f7f6;
-    color: #333;
-    overflow-x: hidden;
-}
+/* Sidebar */
+.sidebar { width: 250px; background: #2c3e50; color: white; display: flex; flex-direction: column; padding: 20px 0; box-shadow: 2px 0 5px rgba(0,0,0,0.1); }
+.sidebar h2 { text-align: center; margin-bottom: 30px; font-size: 1.5em; }
+.sidebar a { padding: 15px 25px; text-decoration: none; color: #bdc3c7; font-weight: bold; transition: 0.2s; font-size: 1.05em; }
+.sidebar a:hover, .sidebar a.active { background: #34495e; color: white; border-left: 5px solid #27ae60; }
 
-header {
-    background-color: #2c3e50;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
+/* Main Content */
+.main-content { flex: 1; padding: 40px; overflow-y: auto; }
+h1 { color: #2c3e50; margin-bottom: 10px; }
+h2 { color: #2c3e50; margin-bottom: 20px; }
 
-header h1 { margin-bottom: 5px; }
-header p { font-size: 0.9em; color: #bdc3c7; }
+/* Stats Grid */
+.stats-grid { display: flex; gap: 20px; }
+.stat-card { background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex: 1; text-align: center; border-top: 4px solid #27ae60; }
+.stat-card h3 { color: #7f8c8d; font-size: 1em; }
+.stat-card p { font-size: 3em; color: #2c3e50; font-weight: bold; margin-top: 10px; }
 
-main {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 0 20px;
-    width: 100%;
-}
+/* Buttons */
+.btn-primary { background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+.btn-primary:hover { background: #2ecc71; transform: translateY(-2px); }
 
-.input-section {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 20px;
-}
+/* Inputs & Result Cards */
+.input-section { display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
+.box { background: white; padding: 20px; border-radius: 8px; flex: 1; min-width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.box h3 { color: #2c3e50; margin-bottom: 15px; }
+.file-input { width: 100%; padding: 15px; border: 2px dashed #27ae60; border-radius: 5px; cursor: pointer; background: #f9f9f9; }
 
-.box {
-    flex: 1;
-    min-width: 300px;
-    background: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.box h2 {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-    color: #2c3e50;
-}
-
-button {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    background-color: #27ae60;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.2em;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s;
-}
-
-button:hover { background-color: #2ecc71; }
-
-#loading {
-    text-align: center;
-    font-size: 1.2em;
-    color: #e67e22;
-    margin-top: 20px;
-    font-weight: bold;
-}
-
-#resultsSection {
-    margin-top: 30px;
-    width: 100%;
-}
-
-.result-card {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    border-left: 6px solid #3498db;
-    width: 100%;
-    overflow-wrap: break-word;
-}
-
+.result-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 6px solid #3498db; }
 .result-card.modified { border-left-color: #f39c12; }
-.result-card.added { border-left-color: #27ae60; }
-.result-card.deleted { border-left-color: #e74c3c; }
 .result-card.unchanged { border-left-color: #27ae60; }
+.result-card.added { border-left-color: #3498db; }
+.result-card.deleted { border-left-color: #e74c3c; }
 
-.status-badge {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: white;
-    margin-bottom: 10px;
-}
+.status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; color: white; margin-bottom: 15px; }
+.status-modified { background: #f39c12; }
+.status-unchanged { background: #27ae60; }
+.status-added { background: #3498db; }
+.status-deleted { background: #e74c3c; }
 
-.status-modified { background-color: #f39c12; }
-.status-added { background-color: #27ae60; }
-.status-deleted { background-color: #e74c3c; }
-.status-unchanged { background-color: #27ae60; }
-
-.sentence-compare {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    margin-bottom: 15px;
-    width: 100%;
-}
-
-.old-sent, .new-sent {
-    flex: 1;
-    min-width: 250px;
-    padding: 10px;
-    padding-left: 15px;
-    border-radius: 5px;
-    background: #f9f9f9;
-    overflow-wrap: break-word;
-}
-
+.sentence-compare { display: flex; gap: 20px; margin-bottom: 15px; flex-wrap: wrap; }
+.old-sent, .new-sent { flex: 1; padding: 15px; border-radius: 5px; background: #f9f9f9; min-width: 250px; font-size: 0.95em; line-height: 1.5; }
 .old-sent { border-left: 3px solid #e74c3c; }
 .new-sent { border-left: 3px solid #27ae60; }
 
-.change-detail {
-    background: #fff3cd;
-    border: 1px solid #ffeeba;
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-    overflow-wrap: break-word;
-    width: 100%;
-}
-
+.change-detail { background: #fff3cd; padding: 15px; border-radius: 5px; margin-top: 10px; font-size: 0.95em; border: 1px solid #ffeeba; }
 .change-detail strong { color: #856404; }
-
 .hidden { display: none; }
-
-/* New styles for File Upload */
-.file-input {
-    width: 100%;
-    padding: 10px;
-    border: 2px dashed #27ae60;
-    border-radius: 5px;
-    background: #f4f7f6;
-    cursor: pointer;
-    margin-bottom: 10px;
-    font-size: 14px;
-}
-
-.file-name {
-    font-size: 0.9em;
-    color: #2c3e50;
-    font-weight: bold;
-    word-break: break-all;
-    margin-top: 5px;
-}

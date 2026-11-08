@@ -3,38 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChangeGuard - Semantic Change Detection</title>
+    <title>ChangeGuard Dashboard</title>
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <header>
-        <h1>🛡️ ChangeGuard</h1>
-        <p>NLP-Based Context-Aware Semantic Change Detection System</p>
-    </header>
 
-    <main>
-        <div class="input-section">
-            <div class="box">
-                <h2>Old Document</h2>
-                <input type="file" id="oldFile" accept=".txt,.pdf,.docx" class="file-input">
-                <p id="oldFileName" class="file-name">No file selected</p>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <h2>🛡️ ChangeGuard</h2>
+        <a href="#" onclick="showPage('dashboard')" class="active" id="nav-dash">Dashboard</a>
+        <a href="#" onclick="showPage('compare')" id="nav-compare">Compare Documents</a>
+        <a href="#" onclick="showPage('history')" id="nav-history">History</a>
+        <a href="#" onclick="showPage('about')" id="nav-about">About</a>
+        <a href="#" onclick="logout()" style="color: #e74c3c; margin-top: auto; border-top: 1px solid #34495e;">Logout</a>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="main-content">
+        
+        <!-- DASHBOARD PAGE -->
+        <div id="page-dashboard" class="page">
+            <h1>Welcome to ChangeGuard, <span id="welcomeUser"></span>!</h1>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Here is an overview of your document comparisons.</p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Comparisons</h3>
+                    <p id="totalComparisons">0</p>
+                </div>
             </div>
-            <div class="box">
-                <h2>New Document</h2>
-                <input type="file" id="newFile" accept=".txt,.pdf,.docx" class="file-input">
-                <p id="newFileName" class="file-name">No file selected</p>
+            
+            <br>
+            <button class="btn-primary" onclick="showPage('compare')">Start New Comparison</button>
+        </div>
+
+        <!-- COMPARE PAGE -->
+        <div id="page-compare" class="page" style="display:none;">
+            <h1>Compare Documents</h1>
+            <p style="color: #7f8c8d; margin-bottom: 20px;">Upload your old and new documents (PDF, DOCX, or TXT) to detect semantic changes.</p>
+            
+            <div class="input-section">
+                <div class="box">
+                    <h3>Old Document</h3>
+                    <input type="file" id="oldFile" class="file-input" accept=".txt,.pdf,.docx">
+                </div>
+                <div class="box">
+                    <h3>New Document</h3>
+                    <input type="file" id="newFile" class="file-input" accept=".txt,.pdf,.docx">
+                </div>
+            </div>
+            
+            <button class="btn-primary" id="compareBtn" onclick="compareDocuments()">Compare Documents</button>
+            
+            <div id="loading" class="hidden" style="margin-top: 20px; color: #e67e22; font-weight: bold;">Extracting text and analyzing with NLP...</div>
+            
+            <div id="resultsSection" class="hidden" style="margin-top: 30px;">
+                <h2>Comparison Results</h2>
+                <div id="resultsContainer"></div>
             </div>
         </div>
 
-        <button id="compareBtn" onclick="compareDocuments()">Compare Documents</button>
-
-        <div id="loading" class="hidden">Extracting text & analyzing with spaCy NLP...</div>
-
-        <div id="resultsSection" class="hidden">
-            <h2>Comparison Results</h2>
-            <div id="resultsContainer"></div>
+        <!-- HISTORY PAGE -->
+        <div id="page-history" class="page" style="display:none;">
+            <h1>Comparison History</h1>
+            <div id="historyContainer" style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">Loading...</div>
         </div>
-    </main>
+
+        <!-- ABOUT PAGE -->
+        <div id="page-about" class="page" style="display:none;">
+            <h1>About ChangeGuard</h1>
+            <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <p>ChangeGuard is an NLP-based document comparison system that identifies changes in meaning between old and updated documents. It detects changes in conditions, permissions, obligations, deadlines, restrictions, and exceptions, and explains their possible impact.</p>
+            </div>
+        </div>
+
+    </div>
 
     <script src="/script.js"></script>
 </body>
