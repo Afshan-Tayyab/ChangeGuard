@@ -5,7 +5,6 @@
 2. Activate environment: `.\venv\Scripts\Activate.ps1`
 3. Go to backend: `cd backend`
 4. Run server: `uvicorn main:app --reload`
-5. Open browser to: `http://127.0.0.1:8000/app/`
 
 ## Technologies Used
 - **FastAPI** (Backend Server)
